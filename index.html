@@ -5,13 +5,138 @@
     <style>
       @import "./src/style.css";
     </style>
-    <title>JSDev</title>
+    <title>PO Sidebar</title>
   </head>
   <body>
-    <h1>Alright. You're set.</h1>
-      <h2 class="tintedBlackLeft">Now build something amazing!</h2>
-      <p>JS in FM is amazing</p>
-    <button type="button">Click Me!</button>
+    <div class="sidebar">
+      <!-- Loading Skeleton Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="skeleton-content">
+          <div class="skeleton-section">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+          </div>
+          <div class="skeleton-section">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field-large"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+          </div>
+          <div class="skeleton-section">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+            <div class="skeleton-field"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-content">
+        <div class="section">
+          <h3>PO Details</h3>
+          <div class="field-group">
+            <label>PO Number</label>
+            <input type="text" id="poNumber" />
+          </div>
+          <div class="field-group">
+            <label>Order Number</label>
+            <input type="text" id="orderNumber" />
+          </div>
+          <div class="field-group">
+            <label>Date</label>
+            <input type="text" id="date" />
+          </div>
+          <div class="field-group">
+            <label>Date Approved</label>
+            <input type="text" id="dateApproved" />
+            <div class="approval-details" id="approvalDetails"></div>
+          </div>
+          <div class="field-group">
+            <label>Delivery Required</label>
+            <input type="text" id="deliveryRequired" />
+          </div>
+          <div class="field-group checkbox-group">
+            <label>
+              <input type="checkbox" id="firm" />
+              <span>Firm Order</span>
+            </label>
+          </div>
+          <div class="field-group">
+            <label>Placed By</label>
+            <input type="text" id="placedBy" />
+          </div>
+          <div class="field-group">
+            <label>Placed With</label>
+            <input type="text" id="placedWith" />
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Vendor Information</h3>
+          <div class="vendor-selector">
+            <label>Select Vendor</label>
+            <input type="text" id="vendorSearch" placeholder="Search or select vendor..." autocomplete="off" />
+            <div class="vendor-dropdown" id="vendorDropdown">
+              <div class="vendor-option" data-id="" style="display: none;">-- Select Vendor --</div>
+            </div>
+          </div>
+          
+          <div id="vendorDetails" class="vendor-details">
+            <div class="field-group">
+              <label>Address</label>
+              <textarea id="vendorAddress" readonly rows="3"></textarea>
+            </div>
+            <div class="field-group">
+              <label>Phone</label>
+              <input type="text" id="vendorPhone" readonly />
+            </div>
+            <div class="field-group">
+              <label>Email</label>
+              <input type="text" id="vendorEmail" />
+            </div>
+            <div class="field-group">
+              <label>Fax</label>
+              <input type="text" id="vendorFax" readonly />
+            </div>
+            <div class="field-group">
+              <label>Preferred Payment</label>
+              <input type="text" id="vendorPayment" readonly />
+            </div>
+            <div class="field-group">
+              <label>Accounting Contact</label>
+              <input type="text" id="vendorAccounting" readonly />
+            </div>
+            <div class="field-group">
+              <label>Accounting Phone</label>
+              <input type="text" id="vendorAccountingPhone" readonly />
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Shipping & Terms</h3>
+          <div class="field-group">
+            <label>Ship Via</label>
+            <input type="text" id="shipVia" />
+          </div>
+          <div class="field-group">
+            <label>Terms</label>
+            <input type="text" id="terms" />
+          </div>
+          <div class="field-group">
+            <label>FOB</label>
+            <input type="text" id="fob" />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script type="module">
       import "./src/index.js";
