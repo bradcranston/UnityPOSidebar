@@ -28,6 +28,62 @@ body {
   position: relative;
 }
 
+/* Unsaved Changes Indicator */
+.unsaved-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #856404;
+  z-index: 1500;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.unsaved-indicator.visible {
+  display: flex;
+}
+
+.unsaved-dot {
+  width: 6px;
+  height: 6px;
+  background: #ffc107;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.unsaved-text {
+  line-height: 1;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 /* Loading Skeleton Styles */
 .loading-overlay {
   position: absolute;
@@ -166,6 +222,7 @@ body {
 }
 
 .field-group input[type="text"],
+.field-group input[type="date"],
 .field-group textarea,
 .vendor-selector select {
   width: 100%;
@@ -180,11 +237,33 @@ body {
 }
 
 .field-group input[type="text"]:focus,
+.field-group input[type="date"]:focus,
 .field-group textarea:focus,
 .vendor-selector select:focus {
   outline: none;
   border-color: #0091CE;
   background-color: #fff;
+}
+
+/* Date input calendar styling */
+.field-group input[type="date"] {
+  cursor: pointer;
+}
+
+/* Hide native mm/dd/yyyy placeholder when date field is empty */
+.field-group input[type="date"].date-empty::-webkit-datetime-edit-fields-wrapper {
+  visibility: hidden;
+}
+
+.field-group input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.field-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background-color: rgba(0, 145, 206, 0.1);
 }
 
 .field-group textarea {

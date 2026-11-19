@@ -5,10 +5,15 @@
     <style>
       @import "./src/style.css";
     </style>
-    <title>PO Sidebar</title>
   </head>
   <body>
     <div class="sidebar">
+      <!-- Unsaved Changes Indicator -->
+      <div class="unsaved-indicator" id="unsavedIndicator">
+        <span class="unsaved-dot"></span>
+        <span class="unsaved-text">Unsaved changes</span>
+      </div>
+      
       <!-- Loading Skeleton Overlay -->
       <div class="loading-overlay" id="loadingOverlay">
         <div class="skeleton-content">
@@ -40,99 +45,308 @@
       
       <div class="sidebar-content">
         <div class="section">
-          <h3>PO Details</h3>
-          <div class="field-group">
-            <label>PO Number</label>
-            <input type="text" id="poNumber" />
-          </div>
-          <div class="field-group">
-            <label>Order Number</label>
-            <input type="text" id="orderNumber" />
-          </div>
+          
           <div class="field-group">
             <label>Date</label>
-            <input type="text" id="date" />
+            <input type="date" id="date" />
           </div>
+          
+          <div class="field-group">
+            <label>Account #</label>
+            <input type="text" id="accountNumber" />
+          </div>
+          
           <div class="field-group">
             <label>Date Approved</label>
-            <input type="text" id="dateApproved" />
+            <input type="date" id="dateApproved" />
             <div class="approval-details" id="approvalDetails"></div>
           </div>
-          <div class="field-group">
-            <label>Delivery Required</label>
-            <input type="text" id="deliveryRequired" />
-          </div>
-          <div class="field-group checkbox-group">
-            <label>
-              <input type="checkbox" id="firm" />
-              <span>Firm Order</span>
-            </label>
-          </div>
-          <div class="field-group">
-            <label>Placed By</label>
-            <input type="text" id="placedBy" />
-          </div>
-          <div class="field-group">
-            <label>Placed With</label>
-            <input type="text" id="placedWith" />
-          </div>
-        </div>
 
-        <div class="section">
-          <h3>Vendor Information</h3>
-          <div class="vendor-selector">
+                  <div class="vendor-selector">
             <label>Select Vendor</label>
             <input type="text" id="vendorSearch" placeholder="Search or select vendor..." autocomplete="off" />
             <div class="vendor-dropdown" id="vendorDropdown">
               <div class="vendor-option" data-id="" style="display: none;">-- Select Vendor --</div>
             </div>
           </div>
+
+          <div class="field-group">
+            <label>Address</label>
+            <textarea id="vendorAddress" readonly rows="3"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label>PO Number</label>
+            <input type="text" id="poNumber" />
+          </div>
+
+          <div class="field-group">
+            <label>Ship Via</label>
+            <input type="text" id="shipVia" list="shipViaList" />
+            <datalist id="shipViaList">
+              <option value="Best Way (EXPRESS)">
+              <option value="Best Way (GROUND)">
+              <option value="Call When Done">
+              <option value="Deliver">
+              <option value="Drop Ship">
+              <option value="Email">
+              <option value="Freight">
+              <option value="Installation">
+              <option value="Pick Up">
+              <option value="See Note on PO">
+              <option value="Web Download">
+              <option value="Will Call">
+              <option value="FedEx Ground">
+              <option value="FedEx Next Day">
+              <option value="FedEx Next Day Saver">
+              <option value="FedEx 2 Day">
+              <option value="FedEx Freight Priority LTL">
+              <option value="FedEx 3rd Party">
+              <option value="UPS Ground">
+              <option value="UPS Next Day">
+              <option value="UPS Next Day Saver">
+              <option value="UPS 2 Day">
+              <option value="UPS 3 Day">
+              <option value="UPS 3rd Party">
+              <option value="USPS">
+              <option value="Priority Mail">
+              <option value="Best Way (Must be in Salt Lake City 2/12/26)">
+            </datalist>
+          </div>
+
+          <div class="field-group">
+            <label>Terms</label>
+            <input type="text" id="terms" list="termsList" />
+            <datalist id="termsList">
+              <option value="Call For Credit Card">
+              <option value="Check">
+              <option value="2% 10 Net 30">
+              <option value="Net 10">
+              <option value="Net 15">
+              <option value="Net 30">
+              <option value="Ashley Frederick AMEX">
+              <option value="Ashley Frederick Visa">
+              <option value="Beth McElhaney AMEX">
+              <option value="Beth McElhaney Visa">
+              <option value="Angie Freeman AMEX">
+              <option value="Angie Freeman Visa">
+              <option value="Angela Donaldson AMEX">
+              <option value="Angela Donaldson Visa">
+              <option value="Donna Schuck AMEX">
+              <option value="Donna Schuck Visa">
+              <option value="Jennifer Reed AMEX">
+              <option value="Jennifer Reed Visa">
+              <option value="Joe Frederick AMEX">
+              <option value="Joe Frederick Visa">
+              <option value="John Melle AMEX">
+              <option value="John Melle Visa">
+              <option value="Lena Tomko AMEX">
+              <option value="Lena Tomko Visa">
+              <option value="Lisa Frederick AMEX">
+              <option value="Lisa Frederick Visa">
+              <option value="Mark Garris AMEX">
+              <option value="Mark Garris Visa">
+              <option value="Melissa Dunn AMEX">
+              <option value="Melissa Dunn Visa">
+              <option value="Rose Markle AMEX">
+              <option value="Rose Markle Visa">
+              <option value="Russ Hall AMEX">
+              <option value="Russ Hall Visa">
+              <option value="Tony Primiero AMEX">
+              <option value="Tony Primiero Visa">
+              <option value="UPC Driver AMEX">
+              <option value="UPC Driver Visa">
+              <option value="Marketing Funds">
+              <option value="SanMar Marketing Funds">
+              <option value="Email invoice for payment">
+            </datalist>
+          </div>
+
+          <div class="field-group">
+            <label>FOB</label>
+            <input type="text" id="fob" list="fobList" />
+            <datalist id="fobList">
+              <option value="Latrobe">
+              <option value="Vendor">
+              <option value="Drop Ship to Customer">
+            </datalist>
+          </div>
+
+          <div class="field-group">
+            <label>Delivery Required</label>
+            <input type="date" id="deliveryRequired" />
+          </div>
           
-          <div id="vendorDetails" class="vendor-details">
-            <div class="field-group">
-              <label>Address</label>
-              <textarea id="vendorAddress" readonly rows="3"></textarea>
-            </div>
-            <div class="field-group">
-              <label>Phone</label>
-              <input type="text" id="vendorPhone" readonly />
-            </div>
-            <div class="field-group">
-              <label>Email</label>
-              <input type="text" id="vendorEmail" />
-            </div>
-            <div class="field-group">
-              <label>Fax</label>
-              <input type="text" id="vendorFax" readonly />
-            </div>
-            <div class="field-group">
-              <label>Preferred Payment</label>
-              <input type="text" id="vendorPayment" readonly />
-            </div>
-            <div class="field-group">
-              <label>Accounting Contact</label>
-              <input type="text" id="vendorAccounting" readonly />
-            </div>
-            <div class="field-group">
-              <label>Accounting Phone</label>
-              <input type="text" id="vendorAccountingPhone" readonly />
-            </div>
+          <div class="field-group checkbox-group">
+            <label>
+              <input type="checkbox" id="firm" />
+              <span>Firm Order</span>
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label>Placed With</label>
+            <input type="text" id="placedWith" list="placedWithList" />
+            <datalist id="placedWithList">
+              <option value="Customer Care">
+              <option value="Website">
+              <option value="Email">
+              <option value="Melissa/Paul">
+              <option value="Dana Marucci">
+              <option value="Katie Shoemaker">
+              <option value="Paul">
+              <option value="Eric">
+              <option value="Mike Tiani Jr.">
+              <option value="Brian">
+              <option value="Christine">
+              <option value="Kevin Dalton">
+              <option value="Sally Lofstrom">
+              <option value="Tim">
+              <option value="Robert LeMaire">
+              <option value="Karen Schmidt">
+              <option value="Joyce Vaow">
+              <option value="Chris Ritchie">
+              <option value="Cristina Meynardi">
+              <option value="Keith">
+              <option value="Mandy">
+              <option value="Kathy Collier">
+              <option value="Rebel">
+              <option value="Karen">
+              <option value="John Flynn">
+              <option value="Pam D'agostino">
+              <option value="Susan Meyer">
+              <option value="Sarah Counts">
+              <option value="Don Mercer">
+              <option value="Laurie Smith">
+              <option value="Dawn Smith">
+              <option value="Rich Mirarchi">
+              <option value="Rick Yeckel">
+              <option value="Rose">
+              <option value="Carol Miller">
+              <option value="Kyle Eslinger">
+              <option value="Tammy Havrilla">
+              <option value="Kendal">
+              <option value="Samantha Lanphear">
+              <option value="Cynthia McCampbell">
+              <option value="John">
+              <option value="Bill Barenholtz">
+              <option value="Marilyn">
+              <option value="Ann Jones">
+              <option value="Steven Groves">
+              <option value="Teresa Hedge">
+              <option value="Jasmine Irwin">
+              <option value="Jesse">
+              <option value="Samantha">
+              <option value="Gloria">
+              <option value="Barbara Kile">
+              <option value="Cindy Brewer">
+              <option value="Mike McDonald">
+              <option value="Trish">
+              <option value="Rob Brandt">
+              <option value="Jan Brisebois">
+              <option value="Jack Pieklo">
+              <option value="Ellen Pfiffner">
+              <option value="Vance">
+              <option value="Dave Nass">
+              <option value="Cassie">
+              <option value="Amy Whitecottom">
+              <option value="Tracy">
+              <option value="Ebeth Union">
+              <option value="Mike Shreve">
+              <option value="Vanessa Montgomery">
+              <option value="Greg">
+              <option value="Billl Henning">
+              <option value="Todd Williams">
+              <option value="Charley Holden">
+              <option value="Sharon Senchur">
+              <option value="Kevin Greene">
+              <option value="Eric Rausch">
+              <option value="Michelle D">
+              <option value="Tim Fisher">
+              <option value="Katy Vance">
+              <option value="Tammy Bailey">
+              <option value="Melanie Deak">
+              <option value="Katherine">
+              <option value="Chris Connors">
+              <option value="Sarah Larson">
+              <option value="Jody Seibert">
+              <option value="Marie Harvey">
+              <option value="Amiee Pesta">
+              <option value="Preston">
+              <option value="Kathy Fels">
+              <option value="Stuart Ramsbottom">
+              <option value="Lindsey Haines">
+            </datalist>
+          </div>
+
+          <div class="field-group">
+            <label>Placed By</label>
+            <input type="text" id="placedBy" list="placedByList" />
+            <datalist id="placedByList">
+              <option value="Ashley Frederick">
+              <option value="Angie Freeman">
+              <option value="Angela Donaldson">
+              <option value="Beth McElhaney">
+              <option value="Donna Schuck">
+              <option value="Jennifer Reed">
+              <option value="Joe Frederick">
+              <option value="John Melle">
+              <option value="Lena Tomko">
+              <option value="Lisa Frederick">
+              <option value="Mark Garris">
+              <option value="Melissa Dunn">
+              <option value="Rose Markle">
+              <option value="Russ Hall">
+              <option value="Scott McCracken">
+              <option value="Shannon Marquis">
+              <option value="Tony Primiero">
+            </datalist>
+          </div>
+
+          <div class="field-group">
+            <label>Order Number</label>
+            <input type="text" id="orderNumber" />
+          </div>
+
+          <div class="field-group">
+            <label>Phone</label>
+            <input type="text" id="vendorPhone" readonly />
+          </div>
+
+          <div class="field-group">
+            <label>Fax</label>
+            <input type="text" id="vendorFax" readonly />
+          </div>
+
+          <div class="field-group">
+            <label>Email</label>
+            <input type="text" id="vendorEmail" readonly />
+          </div>
+
+          <div class="field-group">
+            <label>Preferred Payment</label>
+            <input type="text" id="vendorPayment" list="vendorPaymentList" readonly />
+            <datalist id="vendorPaymentList">
+              <option value="Check">
+              <option value="AMEX">
+              <option value="VISA">
+              <option value="ACH">
+              <option value="WIRE">
+            </datalist>
           </div>
         </div>
 
         <div class="section">
-          <h3>Shipping & Terms</h3>
+          <h3>Accounting Department</h3>
+
           <div class="field-group">
-            <label>Ship Via</label>
-            <input type="text" id="shipVia" />
+            <label>Accounting Contact</label>
+            <input type="text" id="vendorAccounting" readonly />
           </div>
+
           <div class="field-group">
-            <label>Terms</label>
-            <input type="text" id="terms" />
-          </div>
-          <div class="field-group">
-            <label>FOB</label>
-            <input type="text" id="fob" />
+            <label>Accounting Phone</label>
+            <input type="text" id="vendorAccountingPhone" readonly />
           </div>
         </div>
       </div>

@@ -1,5 +1,88 @@
+// Track pending changes
+let pendingChanges = new Set();
+
+function formatDateForFileMaker(dateValue) {
+  // Convert YYYY-MM-DD to MM/DD/YYYY for FileMaker
+  if (!dateValue) return '';
+  
+  // If already in MM/DD/YYYY format, return as is
+  if (dateValue.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+    return dateValue;
+  }
+  
+  // If in YYYY-MM-DD format (from date input), convert it
+  if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateValue.split('-');
+    return `${parseInt(month)}/${parseInt(day)}/${year}`;
+  }
+  
+  return dateValue;
+}
+
+function formatDateForInput(dateValue) {
+  // Convert MM/DD/YYYY to YYYY-MM-DD for date input
+  if (!dateValue) return '';
+  
+  // If already in YYYY-MM-DD format, return as is
+  if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateValue;
+  }
+  
+  // If in MM/DD/YYYY format, convert it
+  if (dateValue.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+    const parts = dateValue.split('/');
+    const month = parts[0].padStart(2, '0');
+    const day = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  
+  return dateValue;
+}
+
+function addSpacesToName(name) {
+  // Add spaces before capital letters in concatenated names
+  if (!name) return '';
+  
+  // Only process if the name has no spaces and has multiple capital letters
+  if (name.includes(' ')) return name;
+  
+  // Add space before each capital letter (except the first one)
+  return name.replace(/([A-Z])/g, ' $1').trim();
+}
+
+function populateDatalist(datalistId, optionsString) {
+  // Populate a datalist with options from a return-separated string
+  const datalist = document.getElementById(datalistId);
+  if (!datalist || !optionsString) return;
+  
+  // Clear existing options
+  datalist.innerHTML = '';
+  
+  // Split by returns (handle both \r and \n)
+  const options = optionsString.split(/\r\n|\r|\n/).filter(opt => opt.trim());
+  
+  // Create option elements
+  options.forEach(optionValue => {
+    const option = document.createElement('option');
+    option.value = optionValue.trim();
+    datalist.appendChild(option);
+  });
+}
+
+function updateUnsavedIndicator() {
+  const indicator = document.getElementById('unsavedIndicator');
+  if (indicator) {
+    if (pendingChanges.size > 0) {
+      indicator.classList.add('visible');
+    } else {
+      indicator.classList.remove('visible');
+    }
+  }
+}
+
 // Global function that FileMaker will call to load data
-window.loadPOData = function(dataString) {
+window.loadPOData = function(dataString, terms, placedWith, shipVia) {
   console.log('Loading PO data:', dataString);
   
   // Hide loading overlay
@@ -14,36 +97,65 @@ window.loadPOData = function(dataString) {
     data = typeof dataString === 'string' ? JSON.parse(dataString) : dataString;
   } catch (error) {
     console.error('Error parsing PO data:', error);
-    return;
+    // FileMaker may embed literal CR/LF characters inside string values, which
+    // are invalid in JSON. Sanitize by escaping control chars within strings and retry.
+    if (typeof dataString === 'string') {
+      try {
+        const sanitized = dataString.replace(/"((?:[^"\\]|\\.)*)"/g, function(match) {
+          return match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+        });
+        data = JSON.parse(sanitized);
+      } catch (e2) {
+        console.error('Error parsing PO data after sanitization:', e2);
+        return;
+      }
+    } else {
+      return;
+    }
   }
   
   // Store vendor options globally
   window.vendorOptions = data.vendorOptions || [];
   
+  // Populate datalists from return-separated strings passed as separate parameters
+  console.log('Datalist data received:', { terms, placedWith, shipVia });
+  
+  if (terms) populateDatalist('termsList', terms);
+  if (placedWith) populateDatalist('placedWithList', placedWith);
+  if (shipVia) populateDatalist('shipViaList', shipVia);
+  
   // Store original values for change detection
   window.originalValues = {
     Number: data.Number || '',
     OrderNumber: data.OrderNumber || '',
-    Date: data.Date || '',
-    DateApproved: data.DateApproved || '',
-    DeliveryRequired: data.DeliveryRequired || '',
+    AccountNumber: data.AccountNumber || '',
+    Date: formatDateForInput(data.Date || ''),
+    DateApproved: formatDateForInput(data.DateApproved || ''),
+    DeliveryRequired: formatDateForInput(data.DeliveryRequired || ''),
     Firm: data.Firm || false,
     PlacedBy: data.PlacedBy || '',
     PlacedWith: data.PlacedWith || '',
     ShipVia: data.ShipVia || '',
     Terms: data.Terms || '',
     FOB: data.FOB || '',
-    Vendor_ID: data.Vendor_ID || ''
+    Vendor_ID: data.Vendor_ID || '',
+    PreferredPayment: data.PreferredPayment || ''
   };
   
   // Populate PO Details
   document.getElementById('poNumber').value = data.Number || '';
   document.getElementById('orderNumber').value = data.OrderNumber || '';
-  document.getElementById('date').value = data.Date || '';
-  document.getElementById('dateApproved').value = data.DateApproved || '';
-  document.getElementById('deliveryRequired').value = data.DeliveryRequired || '';
+  document.getElementById('accountNumber').value = data.AccountNumber || '';
+  document.getElementById('date').value = formatDateForInput(data.Date || '');
+  document.getElementById('dateApproved').value = formatDateForInput(data.DateApproved || '');
+  document.getElementById('deliveryRequired').value = formatDateForInput(data.DeliveryRequired || '');
+  // Toggle class to hide native placeholder text when date fields are empty
+  ['date', 'dateApproved', 'deliveryRequired'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('date-empty', !el.value);
+  });
   document.getElementById('firm').checked = data.Firm || false;
-  
+  addSpacesToName(data.PlacedBy || '')
   // Populate approval details if available
   const approvalDetails = document.getElementById('approvalDetails');
   if (data.ApprovalAccount || data.ApprovalTS) {
@@ -72,6 +184,10 @@ window.loadPOData = function(dataString) {
   
   // Auto-resize text in all inputs
   setTimeout(() => autoResizeAllInputs(), 50);
+  
+  // Clear any pending changes when new data is loaded
+  pendingChanges.clear();
+  updateUnsavedIndicator();
 };
 
 function autoResizeText(element) {
@@ -108,7 +224,7 @@ function populateVendorSelect(vendors) {
   dropdown.innerHTML = '';
   
   // Add vendor options
-  vendors.forEach((vendor, index) => {
+  vendors.forEach((vendor) => {
     const option = document.createElement('div');
     option.className = 'vendor-option';
     option.dataset.id = vendor._ID;
@@ -123,19 +239,21 @@ function populateVendorSelect(vendors) {
   });
 }
 
-function selectVendor(vendorId, vendorName) {
+function selectVendor(vendorId, vendorName, isUserSelection = true) {
   const searchInput = document.getElementById('vendorSearch');
   const dropdown = document.getElementById('vendorDropdown');
   
+  console.log('Selecting vendor:', vendorId, vendorName);
+  
   searchInput.value = vendorName;
   dropdown.classList.remove('active');
-  displayVendorDetails(vendorId);
+  displayVendorDetails(vendorId, isUserSelection);
 }
 
 function selectVendorById(vendorId) {
   const vendor = window.vendorOptions.find(v => v._ID === vendorId);
   if (vendor) {
-    selectVendor(vendorId, vendor.VendorName.trim());
+    selectVendor(vendorId, vendor.VendorName.trim(), false);
   }
 }
 
@@ -158,18 +276,14 @@ function filterVendors(searchTerm) {
   return hasVisible;
 }
 
-function displayVendorDetails(vendorId) {
-  const vendorDetails = document.getElementById('vendorDetails');
-  
+function displayVendorDetails(vendorId, isUserSelection = true) {
   if (!vendorId) {
-    vendorDetails.classList.remove('active');
     return;
   }
   
   const vendor = window.vendorOptions.find(v => v._ID === vendorId);
   
   if (!vendor) {
-    vendorDetails.classList.remove('active');
     return;
   }
   
@@ -182,11 +296,19 @@ function displayVendorDetails(vendorId) {
   document.getElementById('vendorAccounting').value = vendor.AccountingName || '';
   document.getElementById('vendorAccountingPhone').value = vendor.AccountingPhone || '';
   
+  // Populate PO Number with vendor abbreviation only when user selects a vendor
+  if (isUserSelection && vendor.Abbreviation) {
+    const normalizedAbbreviation = vendor.Abbreviation.trim().startsWith('-')
+      ? vendor.Abbreviation.trim()
+      : `-${vendor.Abbreviation.trim()}`;
+    const poNumberInput = document.getElementById('poNumber');
+    poNumberInput.value = normalizedAbbreviation;
+    // Notify FileMaker of the PO Number change
+    notifyFileMakerOfChange('Number', normalizedAbbreviation);
+  }
+  
   // Store original vendor email for change detection
   window.currentVendorEmail = vendor.Email || '';
-  
-  // Show vendor details with animation
-  vendorDetails.classList.add('active');
   
   // Auto-resize text in vendor detail inputs
   setTimeout(() => {
@@ -199,43 +321,51 @@ function displayVendorDetails(vendorId) {
     autoResizeText(document.getElementById('vendorAccountingPhone'));
   }, 50);
   
-  // Notify FileMaker of vendor selection
-  notifyFileMakerOfChange('Vendor_ID', vendorId);
-  
-  // Attach change listener to vendor email
-  const emailInput = document.getElementById('vendorEmail');
-  if (emailInput) {
-    // Remove any existing listeners
-    emailInput.replaceWith(emailInput.cloneNode(true));
-    const newEmailInput = document.getElementById('vendorEmail');
-    
-    newEmailInput.addEventListener('change', (e) => {
-      notifyFileMakerOfChange('Email', e.target.value);
-      // Auto-resize text after change
-      setTimeout(() => autoResizeText(e.target), 10);
-    });
-    
-    newEmailInput.addEventListener('input', (e) => {
-      // Auto-resize text as user types
-      autoResizeText(e.target);
-    });
-  }
+  // Notify FileMaker of vendor selection immediately
+  // Use setTimeout to ensure it happens after the UI updates
+  setTimeout(() => {
+    console.log('Sending vendor selection to FileMaker - Vendor_ID:', vendorId);
+    notifyFileMakerOfChange('Vendor_ID', vendorId);
+    notifyFileMakerOfChange('DefaultType', vendor.DefaultType || '');
+  }, 100);
 }
 
 function notifyFileMakerOfChange(fieldName, newValue) {
+  // Format dates for FileMaker
+  let valueToSend = newValue;
+  if (fieldName === 'Date' || fieldName === 'DateApproved' || fieldName === 'DeliveryRequired') {
+    valueToSend = formatDateForFileMaker(newValue);
+  }
+  
   const parameter = JSON.stringify({
     mode: 'updatePO',
     fieldName: fieldName,
-    value: newValue
+    value: valueToSend
   });
   
   console.log('Notifying FileMaker of change:', parameter);
   
+  // Track this change as pending temporarily
+  pendingChanges.add(fieldName);
+  updateUnsavedIndicator();
+  
   if (window.FileMaker && window.FileMaker.PerformScript) {
     window.FileMaker.PerformScript('Manage: PO Lines', parameter);
+    
+    // Remove from pending changes after sending (change has been transmitted)
+    setTimeout(() => {
+      pendingChanges.delete(fieldName);
+      updateUnsavedIndicator();
+    }, 500);
+  } else {
+    // If FileMaker not available (testing), clear immediately
+    setTimeout(() => {
+      pendingChanges.delete(fieldName);
+      updateUnsavedIndicator();
+    }, 500);
   }
   
-  // Update stored original value
+  // Update stored original value (keep in input format)
   if (window.originalValues) {
     window.originalValues[fieldName] = newValue;
   }
@@ -249,6 +379,7 @@ window.flushPendingChanges = function() {
   const fieldMapping = {
     'poNumber': 'Number',
     'orderNumber': 'OrderNumber',
+    'accountNumber': 'AccountNumber',
     'date': 'Date',
     'dateApproved': 'DateApproved',
     'deliveryRequired': 'DeliveryRequired',
@@ -280,19 +411,20 @@ window.flushPendingChanges = function() {
     }
   });
   
-  // Check vendor email separately if it's been modified
-  const emailInput = document.getElementById('vendorEmail');
-  if (emailInput && window.currentVendorEmail !== undefined) {
-    if (emailInput.value !== window.currentVendorEmail) {
-      console.log(`Flushing change for Email: "${window.currentVendorEmail}" -> "${emailInput.value}"`);
-      notifyFileMakerOfChange('Email', emailInput.value);
-      window.currentVendorEmail = emailInput.value;
-      changesFlushed++;
-    }
-  }
-  
   console.log(`Flushed ${changesFlushed} pending change(s)`);
+  
+  // Clear pending changes after flush
+  pendingChanges.clear();
+  updateUnsavedIndicator();
+  
   return changesFlushed;
+};
+
+// Function FileMaker can call to mark changes as saved
+window.markChangesSaved = function() {
+  pendingChanges.clear();
+  updateUnsavedIndicator();
+  console.log('All changes marked as saved');
 };
 
 function attachEditListeners() {
@@ -300,6 +432,7 @@ function attachEditListeners() {
   const fieldMapping = {
     'poNumber': 'Number',
     'orderNumber': 'OrderNumber',
+    'accountNumber': 'AccountNumber',
     'date': 'Date',
     'dateApproved': 'DateApproved',
     'deliveryRequired': 'DeliveryRequired',
@@ -324,7 +457,20 @@ function attachEditListeners() {
       } else {
         element.addEventListener('change', (e) => {
           notifyFileMakerOfChange(dataFieldName, e.target.value);
+          // Toggle empty class for date fields to hide native placeholder
+          if (e.target.type === 'date') {
+            e.target.classList.toggle('date-empty', !e.target.value);
+          }
+          // Auto-resize text after change
+          setTimeout(() => autoResizeText(e.target), 10);
         });
+        
+        // Add input listener for auto-resize on text fields (not date fields)
+        if (element.type === 'text' || element.tagName === 'TEXTAREA') {
+          element.addEventListener('input', (e) => {
+            autoResizeText(e.target);
+          });
+        }
       }
     }
   });
@@ -345,6 +491,22 @@ document.addEventListener('DOMContentLoaded', () => {
   searchInput.addEventListener('input', (e) => {
     dropdown.classList.add('active');
     filterVendors(e.target.value);
+  });
+  
+  // Handle blur - try to match vendor if typed directly
+  searchInput.addEventListener('blur', (e) => {
+    setTimeout(() => {
+      const searchValue = e.target.value.trim().toLowerCase();
+      if (searchValue) {
+        // Try to find an exact match
+        const matchingVendor = window.vendorOptions?.find(v => 
+          v.VendorName.trim().toLowerCase() === searchValue
+        );
+        if (matchingVendor) {
+          selectVendor(matchingVendor._ID, matchingVendor.VendorName.trim());
+        }
+      }
+    }, 200); // Delay to allow dropdown click to register first
   });
   
   // Close dropdown when clicking outside
